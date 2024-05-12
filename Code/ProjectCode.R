@@ -116,3 +116,69 @@ outliers
 #4. D6.Chao1.diversity: There are 3 outliers ranging from 383.66 to 422.75.
 #there are no identified outliers for the variable D1.D6.Jaccard.distance.
 #These outliers should be investigated to determine if they are real data points or if they are errors or anomalies in the dataset.
+
+#4.Testing for normality/ homoscedasticity
+#Testing Normality
+#QQ plot and histogram
+hist(AAD$D1.Shannon.diversity, main = "Histogram of D1.Shannon.diversity")
+
+hist(AAD$D6.Shannon.diversity, main = "Histogram of D6.Shannon.diversity")
+
+hist(AAD$D1.Chao1.diversity, main = "Histogram of D1.Chao1.diversity")
+
+hist(AAD$D6.Chao1.diversity, main = "Histogram of D6.Chao1.diversity")
+
+
+#Shapiro test
+shapiro.test(AAD$D1.Shannon.diversity) 
+#W = 0.91168, p-value = 4.134e-13
+shapiro.test(AAD$D6.Shannon.diversity)
+#W = 0.91549, p-value = 8.795e-13
+shapiro.test(AAD$D1.Chao1.diversity)
+#W = 0.94928, p-value = 2.489e-09
+shapiro.test(AAD$D6.Chao1.diversity)
+#W = 0.96965, p-value = 1.776e-06
+
+#D1.Shannon.diversity is not normally distributed
+#D6.Shannon.diversity is not normally distributed
+#D1.Chao1.diversity is not normally distributed
+#D6.Chao1.diversity is not normally distributed
+
+#Homoscedasticity
+#Residual Plot
+model <- lm(D1.Shannon.diversity ~ D6.Shannon.diversity, data = AAD)
+plot(model, which = 1)
+
+model <- lm(D1.Chao1.diversity ~ D6.Chao1.diversity, data = AAD)
+plot(model, which = 1)
+
+
+# Bartlett’s test
+bartlett.test(list(AAD$D1.Shannon.diversity, AAD$D6.Shannon.diversity))
+#Bartlett's K-squared = 22.141, df = 1, p-value = 2.533e-06
+bartlett.test(list(AAD$D1.Chao1.diversity, AAD$D6.Chao1.diversity))
+#Bartlett's K-squared = 4.3857, df = 1, p-value = 0.03624
+
+#AAD$D1.Shannon.diversity and AAD$D6.Shannon.diversity are significantly different from each other. not homoscedastic
+#AAD$D1.Chao1.diversity and AAD$D6.Chao1.diversity are significantly different from each other. not homoscedastic
+
+#5. Statistical Inference
+# Calculate the confidence intervals for the means of Jacard distance for each Antibiotic class
+antibiotics <- unique(AAD$Antibiotic.class)
+confidence_levels <- c(0.90, 0.95, 0.99)
+
+for (antibiotic in antibiotics) {
+  cat("Antibiotic class:", antibiotic, "\n")
+  data_subset <- AAD$D1.D6.Jaccard.distance[AAD$Antibiotic.class == antibiotic]
+  for (confidence_level in confidence_levels) {
+    ci <- t.test(data_subset, conf.level = confidence_level)$conf.int
+    cat("Confidence Level:", confidence_level * 100, "%")
+    cat(", Confidence Interval:", ci, "\n")
+  }
+  cat("\n")
+}
+#The confidence intervals provide a range of values within which we can reasonably estimate the true mean Jacard distance for each Antibiotic class.
+#At lower confidence levels (e.g., 90% and 95% confidence), the intervals are narrower, indicating higher confidence in the estimated range of the mean.
+#At higher confidence levels (e.g., 99% confidence), the intervals become wider, reflecting greater uncertainty for the true mean.
+#When requesting higher confidence levels (e.g., 99% confidence interval), the interval width increases noticeably compared to lower confidence levels (e.g., 90% and 95% confidence intervals).
+#This increase in interval width signifies a trade-off between confidence and precision. Higher confidence levels require wider intervals to capture a larger range of potential values for the true mean, resulting in less precise estimates.
